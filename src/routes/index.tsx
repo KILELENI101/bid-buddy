@@ -23,8 +23,8 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    category: typeof search.category === "string" ? search.category : "all",
+  validateSearch: (search: Record<string, unknown>): { category?: string } => ({
+    category: typeof search['category'] === "string" ? (search['category'] as string) : undefined,
   }),
   component: Home,
 });
@@ -35,7 +35,7 @@ function Home() {
   const [bid, setBid] = useState(18405);
   const [url, setUrl] = useState("");
   const [pick, setPick] = useState("");
-  const active = categories.some((c) => c.id === category) ? category : "all";
+  const active = category && categories.some((c) => c.id === category) ? category : "all";
   const setActive = (id: string) =>
     navigate({ search: { category: id }, resetScroll: false });
 
