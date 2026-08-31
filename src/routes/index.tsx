@@ -23,8 +23,8 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { category?: string } => ({
-    category: typeof search['category'] === "string" ? (search['category'] as string) : undefined,
+  validateSearch: (search: Record<string, unknown>): { category: string } => ({
+    category: typeof search['category'] === "string" ? (search['category'] as string) : "all",
   }),
   component: Home,
 });
