@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Globe, Minus, Plus, ChevronRight, ChevronDown } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { RankRow } from "@/components/rank-list";
@@ -22,12 +23,21 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { category?: string | undefined } => ({
+    category: typeof search['category'] === "string" ? (search['category'] as string) : undefined,
+  }),
   component: Home,
 });
 
 function Home() {
+  const { category } = Route.useSearch();
+  const navigate = useNavigate({ from: "/" });
   const [bid, setBid] = useState(18405);
-  const [active, setActive] = useState("all");
+  const [url, setUrl] = useState("");
+  const [pick, setPick] = useState("");
+  const active = category && categories.some((c) => c.id === category) ? category : "all";
+  const setActive = (id: string) =>
+    navigate({ search: { category: id }, resetScroll: false });
 
   const rows = useMemo(
     () => (active === "all" ? listings : listings.filter((l) => l.category === active)),
@@ -71,11 +81,30 @@ function Home() {
 
         <form
           className="mt-8 flex flex-wrap items-center gap-3"
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!url.trim()) {
+              toast.error("Add a product URL or @handle first.");
+              return;
+            }
+            if (!pick) {
+              toast.error("Pick a category for your slot.");
+              return;
+            }
+            const label = categories.find((c) => c.id === pick)?.label ?? pick;
+            const beats = listings.filter((l) => l.amount < bid).length;
+            toast.success(`Bid of ${formatMoney(bid)} placed on ${label}`, {
+              description: `${url.trim()} would sit above ${beats} ${beats === 1 ? "listing" : "listings"}. Demo board — no payment taken.`,
+            });
+            setUrl("");
+            setPick("");
+          }}
         >
           <div className="relative flex-1 min-w-[260px]">
             <Globe className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
               placeholder="Your product URL or @handle"
               className="h-13 w-full rounded-full border border-border bg-card py-3.5 pl-11 pr-4 text-sm outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40"
             />
@@ -83,7 +112,8 @@ function Home() {
           <div className="relative min-w-[200px]">
             <select
               className="h-13 w-full appearance-none rounded-full border border-border bg-card py-3.5 pl-4 pr-10 text-sm outline-none focus:ring-2 focus:ring-ring/40"
-              defaultValue=""
+              value={pick}
+              onChange={(e) => setPick(e.target.value)}
             >
               <option value="" disabled>
                 Choose a category
