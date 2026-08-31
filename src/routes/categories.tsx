@@ -41,6 +41,7 @@ function Categories() {
               <Link
                 key={c.id}
                 to="/"
+                search={{ category: c.id }}
                 className="rounded-2xl border border-border bg-card p-5 shadow-card transition-transform hover:-translate-y-0.5"
               >
                 <h2 className="text-base font-bold">{c.label}</h2>
