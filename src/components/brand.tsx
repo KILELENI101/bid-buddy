@@ -2,14 +2,14 @@ import { Link } from "@tanstack/react-router";
 
 export function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2.5">
+    <Link to="/" search={{ category: "all" }} className="flex items-center gap-2.5">
       <span className="flex flex-col gap-[3px]">
         <span className="block h-[3px] w-6 rounded-full bg-primary" />
         <span className="block h-[3px] w-4 rounded-full bg-foreground/70" />
         <span className="block h-[3px] w-5 rounded-full bg-foreground/40" />
       </span>
       <span className="text-xl font-bold tracking-tight">
-        bidrank<span className="text-muted-foreground">.lol</span>
+        OFFER<span className="text-muted-foreground">RANKING</span>
       </span>
     </Link>
   );
