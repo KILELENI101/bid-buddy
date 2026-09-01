@@ -14,7 +14,124 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      offers: {
+        Row: {
+          category: string
+          clicks: number
+          coupon_code: string | null
+          created_at: string
+          description: string
+          discount_label: string
+          expires_at: string | null
+          id: string
+          initials: string
+          merchant: string
+          owner_key: string | null
+          starts_at: string
+          tint: string
+          title: string
+          url: string
+          vote_count: number
+        }
+        Insert: {
+          category: string
+          clicks?: number
+          coupon_code?: string | null
+          created_at?: string
+          description: string
+          discount_label: string
+          expires_at?: string | null
+          id?: string
+          initials?: string
+          merchant: string
+          owner_key?: string | null
+          starts_at?: string
+          tint?: string
+          title: string
+          url: string
+          vote_count?: number
+        }
+        Update: {
+          category?: string
+          clicks?: number
+          coupon_code?: string | null
+          created_at?: string
+          description?: string
+          discount_label?: string
+          expires_at?: string | null
+          id?: string
+          initials?: string
+          merchant?: string
+          owner_key?: string | null
+          starts_at?: string
+          tint?: string
+          title?: string
+          url?: string
+          vote_count?: number
+        }
+        Relationships: []
+      }
+      rank_targets: {
+        Row: {
+          created_at: string
+          id: string
+          offer_id: string
+          owner_key: string
+          target_rank: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          offer_id: string
+          owner_key: string
+          target_rank?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          offer_id?: string
+          owner_key?: string
+          target_rank?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rank_targets_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          offer_id: string
+          voter_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          offer_id: string
+          voter_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          offer_id?: string
+          voter_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
