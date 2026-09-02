@@ -1,19 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
-import { categories, formatMoney, listings } from "@/lib/rankings";
+import { useOffers } from "@/hooks/use-offer-data";
+import { categories, isLive, rankOffers } from "@/lib/offers";
 
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
-      { title: "Categories — bidrank.lol" },
+      { title: "Deal categories — OFFERRANKING" },
       {
         name: "description",
-        content: "Browse every board on bidrank.lol: agents, SEO, marketing, crypto, dev tools and more.",
+        content:
+          "Browse every deal board: software, marketing, finance, retail, travel, health, gaming and business offers.",
       },
-      { property: "og:title", content: "Categories — bidrank.lol" },
+      { property: "og:title", content: "Deal categories — OFFERRANKING" },
       {
         property: "og:description",
-        content: "Browse every board: agents, SEO, marketing, crypto, dev tools, security and health.",
+        content: "Software, marketing, finance, retail, travel, health, gaming and business deals.",
       },
     ],
   }),
@@ -21,22 +24,24 @@ export const Route = createFileRoute("/categories")({
 });
 
 function Categories() {
+  const { data: offers = [], isLoading } = useOffers();
   const boards = categories.filter((c) => c.id !== "all");
+
+  const live = useMemo(() => rankOffers(offers.filter((o) => isLive(o))), [offers]);
 
   return (
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto w-full max-w-5xl px-5">
-        <h1 className="text-4xl font-bold tracking-tight">Every board</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Every deal board</h1>
         <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-          Each category keeps its own ranking, so a $40 bid can still hold #1 somewhere.
+          Each category keeps its own ranking, so a niche coupon can still hold #1 somewhere.
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {boards.map((c) => {
-            const inBoard = listings.filter((l) => l.category === c.id);
+            const inBoard = live.filter((o) => o.category === c.id);
             const top = inBoard[0];
-            const entry = top ? top.amount + 1 : 1;
             return (
               <Link
                 key={c.id}
@@ -46,15 +51,17 @@ function Categories() {
               >
                 <h2 className="text-base font-bold">{c.label}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {inBoard.length} claimed {inBoard.length === 1 ? "slot" : "slots"}
+                  {isLoading ? "loading…" : `${inBoard.length} live ${inBoard.length === 1 ? "deal" : "deals"}`}
                 </p>
                 <p className="mt-4 text-sm font-semibold text-primary">
-                  #1 costs {formatMoney(entry)}
+                  {top ? `#1 needs ${top.vote_count + 1} votes` : "#1 is open"}
                 </p>
                 {top ? (
-                  <p className="mt-1 truncate text-xs text-muted-foreground">held by {top.domain}</p>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    top: {top.discount_label} at {top.merchant}
+                  </p>
                 ) : (
-                  <p className="mt-1 text-xs text-muted-foreground">unclaimed</p>
+                  <p className="mt-1 text-xs text-muted-foreground">no deals posted yet</p>
                 )}
               </Link>
             );
