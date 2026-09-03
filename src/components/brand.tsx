@@ -9,8 +9,9 @@ export function Logo() {
         <span className="block h-[3px] w-5 rounded-full bg-foreground/40" />
       </span>
       <span className="text-xl font-bold tracking-tight">
-        OFFER<span className="text-muted-foreground">RANKING</span>
+        TOP<span className="text-muted-foreground">OFFER</span>
       </span>
+
     </Link>
   );
 }
