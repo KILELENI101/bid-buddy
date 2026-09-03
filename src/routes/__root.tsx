@@ -78,15 +78,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "bidrank.lol — the pay-to-rank leaderboard" },
+      { title: "OFFERRANKING — community-ranked offers, deals and coupons" },
       {
         name: "description",
-        content: "A live leaderboard where the highest standing bid holds the top slot.",
+        content: "Post offers, deals and coupon codes. Votes decide which discount holds #1.",
       },
-      { property: "og:title", content: "bidrank.lol — the pay-to-rank leaderboard" },
+      { property: "og:title", content: "OFFERRANKING — community-ranked offers and deals" },
       {
         property: "og:description",
-        content: "A live leaderboard where the highest standing bid holds the top slot.",
+        content: "Post offers, deals and coupon codes. Votes decide which discount holds #1.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
