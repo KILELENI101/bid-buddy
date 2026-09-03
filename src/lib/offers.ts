@@ -50,7 +50,7 @@ export type RankTarget = {
 
 export const DAILY_VOTE_CREDITS = 10;
 
-const VISITOR_STORAGE_KEY = "offerranking:visitor";
+const VISITOR_STORAGE_KEY = "topoffer:visitor";
 
 /** Browser-only. Returns a stable anonymous UUID for this visitor. */
 export function readVisitorKey(): string {

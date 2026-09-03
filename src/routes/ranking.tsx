@@ -18,13 +18,13 @@ import {
 export const Route = createFileRoute("/ranking")({
   head: () => ({
     meta: [
-      { title: "Rank goals — OFFERRANKING" },
+      { title: "Rank goals — TOPOFFER" },
       {
         name: "description",
         content:
           "Pick a target rank for each deal you posted and track exactly how many votes it needs to get there.",
       },
-      { property: "og:title", content: "Rank goals — OFFERRANKING" },
+      { property: "og:title", content: "Rank goals — TOPOFFER" },
       {
         property: "og:description",
         content: "Set a target rank for your deals and track the votes needed to reach the podium.",

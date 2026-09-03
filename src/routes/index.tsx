@@ -20,13 +20,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "OFFERRANKING — the community-ranked deals board" },
+      { title: "TOPOFFER — the community-ranked deals board" },
       {
         name: "description",
         content:
           "Submit offers, deals and coupon codes. Votes decide the ranking, so the best discount holds #1.",
       },
-      { property: "og:title", content: "OFFERRANKING — the community-ranked deals board" },
+      { property: "og:title", content: "TOPOFFER — the community-ranked deals board" },
       {
         property: "og:description",
         content: "Submit deals and coupon codes. Votes decide the ranking — the best offer holds #1.",
