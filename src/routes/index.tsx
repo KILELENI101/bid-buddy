@@ -2,19 +2,29 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronDown, ChevronRight, Globe, CalendarClock } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Globe,
+  CalendarClock,
+  Plus,
+  X,
+} from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { OfferRow } from "@/components/offer-row";
 import { Tile } from "@/components/brand";
 import { useMyVotes, useOffers, useToggleVote, useVisitorKey } from "@/hooks/use-offer-data";
 import {
-  categories,
+  allCategories,
   isLive,
   isUpcoming,
   rankOffers,
+  slugifyCategory,
   submitOffer,
   timeLeft,
   type NewOffer,
+  type RankedOffer,
 } from "@/lib/offers";
 
 export const Route = createFileRoute("/")({
@@ -24,13 +34,15 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Submit offers, deals and coupon codes. Votes decide the ranking, so the best discount holds #1.",
+          "Post offers, deals and coupon codes in any niche. Votes decide the ranking, so the best discount holds #1.",
       },
       { property: "og:title", content: "TOPOFFER — the community-ranked deals board" },
       {
         property: "og:description",
-        content: "Submit deals and coupon codes. Votes decide the ranking — the best offer holds #1.",
+        content: "Post deals and coupon codes. Votes decide the ranking — the best offer holds #1.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   validateSearch: (search: Record<string, unknown>): { category?: string | undefined } => ({
@@ -38,6 +50,11 @@ export const Route = createFileRoute("/")({
   }),
   component: Home,
 });
+
+/** Deals shown per page; a new page starts once the board passes this many deals. */
+const PAGE_SIZE = 50;
+/** Separator lines are drawn before these ranks. */
+const TIER_MARKS = [11, 21, 31, 41, 51];
 
 const emptyForm = {
   title: "",
@@ -47,8 +64,13 @@ const emptyForm = {
   coupon_code: "",
   description: "",
   category: "",
+  customCategory: "",
   expires_at: "",
+  neverExpires: true,
 };
+
+const inputClass =
+  "h-13 rounded-full border border-border bg-card px-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40";
 
 function Home() {
   const { category } = Route.useSearch();
@@ -62,9 +84,16 @@ function Home() {
 
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
-  const active = category && categories.some((c) => c.id === category) ? category : "all";
-  const setActive = (id: string) => navigate({ search: { category: id }, resetScroll: false });
+  const boardCategories = useMemo(() => allCategories(offers), [offers]);
+  const active =
+    category && boardCategories.some((c) => c.id === category) ? category : "all";
+  const setActive = (id: string) => {
+    setPage(1);
+    navigate({ search: { category: id }, resetScroll: false });
+  };
 
   const votedIds = useMemo(() => new Set(myVotes.map((v) => v.offer_id)), [myVotes]);
 
@@ -73,6 +102,13 @@ function Home() {
     const scoped = active === "all" ? live : live.filter((o) => o.category === active);
     return rankOffers(scoped);
   }, [offers, active]);
+
+  const pageCount = Math.max(1, Math.ceil(board.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const pageOffers = board.slice(pageStart, pageStart + PAGE_SIZE);
+  const podium = currentPage === 1 ? pageOffers.slice(0, 3) : [];
+  const rest = currentPage === 1 ? pageOffers.slice(3) : pageOffers;
 
   const upcoming = useMemo(
     () =>
@@ -89,11 +125,31 @@ function Home() {
   const onVote = (id: string) => {
     if (!visitorKey) return;
     vote.mutate(id, {
-      onSuccess: (result) =>
-        toast.success(result === "added" ? "Vote counted" : "Vote removed"),
+      onSuccess: (result) => toast.success(result === "added" ? "Vote counted" : "Vote removed"),
       onError: () => toast.error("Couldn't save your vote. Try again."),
     });
   };
+
+  const renderRow = (offer: RankedOffer) => (
+    <div key={offer.id}>
+      {TIER_MARKS.includes(offer.rank) ? (
+        <div className="flex items-center gap-3 py-4" aria-hidden="true">
+          <span className="h-px flex-1 bg-border" />
+          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Top {offer.rank - 1}
+          </span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+      ) : null}
+      <OfferRow
+        offer={offer}
+        voted={votedIds.has(offer.id)}
+        pending={vote.isPending}
+        onVote={onVote}
+        mine={!!visitorKey && offer.owner_key === visitorKey}
+      />
+    </div>
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,27 +161,51 @@ function Home() {
       toast.error("Add the discount, e.g. “30% off”.");
       return;
     }
-    if (!form.category) {
-      toast.error("Pick a category for your deal.");
+    const chosenCategory =
+      form.category === "__custom"
+        ? slugifyCategory(form.customCategory)
+        : form.category;
+    if (!chosenCategory) {
+      toast.error(
+        form.category === "__custom"
+          ? "Name your niche, e.g. “3D printing”."
+          : "Pick a category for your deal.",
+      );
+      return;
+    }
+    if (!form.neverExpires && !form.expires_at) {
+      toast.error("Add an expiry date or mark the deal as never expiring.");
       return;
     }
     const url = form.url.trim().startsWith("http") ? form.url.trim() : `https://${form.url.trim()}`;
+    let merchant = form.merchant.trim();
+    if (!merchant) {
+      try {
+        merchant = new URL(url).hostname.replace(/^www\./, "");
+      } catch {
+        toast.error("That link doesn't look valid.");
+        return;
+      }
+    }
     const payload: NewOffer = {
       title: form.title.trim(),
-      merchant: form.merchant.trim() || new URL(url).hostname.replace(/^www\./, ""),
+      merchant,
       url,
       coupon_code: form.coupon_code.trim() ? form.coupon_code.trim().toUpperCase() : null,
       discount_label: form.discount_label.trim(),
       description: form.description.trim() || "Submitted by a member of the community.",
-      category: form.category,
+      category: chosenCategory,
       starts_at: new Date().toISOString(),
-      expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
+      expires_at:
+        !form.neverExpires && form.expires_at ? new Date(form.expires_at).toISOString() : null,
     };
     setSaving(true);
     try {
       await submitOffer(payload, visitorKey);
       await queryClient.invalidateQueries({ queryKey: ["offers"] });
       setForm(emptyForm);
+      setFormOpen(false);
+      setActive(chosenCategory);
       toast.success("Deal published", {
         description: "It's live on the board — votes decide how high it climbs.",
       });
@@ -154,82 +234,136 @@ function Home() {
           The best offer wins <span className="text-primary">#1</span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-center text-sm text-muted-foreground">
-          Post an offer, deal or coupon code. Every vote moves it up the board — no bidding, no
-          paid placement.
+          Post an offer, deal or coupon code in any niche. Every vote moves it up the board — no
+          bidding, no paid placement, no account needed.
         </p>
 
-        <form className="mt-8 grid gap-3 sm:grid-cols-2" onSubmit={handleSubmit}>
-          <input
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="Deal title — e.g. “Acme Pro — 40% off annual”"
-            className="h-13 rounded-full border border-border bg-card px-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40 sm:col-span-2"
-          />
-          <div className="relative">
-            <Globe className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={form.url}
-              onChange={(e) => setForm({ ...form, url: e.target.value })}
-              placeholder="Link to the offer"
-              className="h-13 w-full rounded-full border border-border bg-card pl-11 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40"
-            />
-          </div>
-          <input
-            value={form.discount_label}
-            onChange={(e) => setForm({ ...form, discount_label: e.target.value })}
-            placeholder="Discount — 30% off, BOGO, free trial…"
-            className="h-13 rounded-full border border-border bg-card px-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40"
-          />
-          <input
-            value={form.coupon_code}
-            onChange={(e) => setForm({ ...form, coupon_code: e.target.value })}
-            placeholder="Coupon code (optional)"
-            className="h-13 rounded-full border border-border bg-card px-4 text-sm uppercase outline-none placeholder:normal-case placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40"
-          />
-          <div className="relative">
-            <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="h-13 w-full appearance-none rounded-full border border-border bg-card pl-4 pr-10 text-sm outline-none focus:ring-2 focus:ring-ring/40"
-            >
-              <option value="" disabled>
-                Choose a category
-              </option>
-              {categories
-                .filter((c) => c.id !== "all")
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
+        <div className="mt-8">
+          {formOpen ? (
+            <form className="grid gap-3 sm:grid-cols-2" onSubmit={handleSubmit}>
+              <input
+                autoFocus
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                placeholder="Deal title — e.g. “Acme Pro — 40% off annual”"
+                className={`${inputClass} sm:col-span-2`}
+              />
+              <div className="relative">
+                <Globe className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={form.url}
+                  onChange={(e) => setForm({ ...form, url: e.target.value })}
+                  placeholder="Link to the offer"
+                  className={`${inputClass} w-full pl-11 pr-4`}
+                />
+              </div>
+              <input
+                value={form.discount_label}
+                onChange={(e) => setForm({ ...form, discount_label: e.target.value })}
+                placeholder="Discount — 30% off, BOGO, free trial…"
+                className={inputClass}
+              />
+              <input
+                value={form.coupon_code}
+                onChange={(e) => setForm({ ...form, coupon_code: e.target.value })}
+                placeholder="Coupon code (optional)"
+                className={`${inputClass} uppercase placeholder:normal-case`}
+              />
+              <div className="relative">
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="h-13 w-full appearance-none rounded-full border border-border bg-card pl-4 pr-10 text-sm outline-none focus:ring-2 focus:ring-ring/40"
+                >
+                  <option value="" disabled>
+                    Choose a category
                   </option>
-                ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          </div>
-          <input
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="One line on what you get"
-            className="h-13 rounded-full border border-border bg-card px-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40"
-          />
-          <label className="flex h-13 items-center gap-3 rounded-full border border-border bg-card px-4 text-sm text-muted-foreground">
-            Expires
-            <input
-              type="date"
-              value={form.expires_at}
-              onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
-              className="flex-1 bg-transparent text-foreground outline-none"
-            />
-          </label>
-          <button
-            disabled={saving}
-            className="h-13 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-pop transition-transform hover:-translate-y-0.5 disabled:opacity-60 sm:col-span-2"
-          >
-            {saving ? "Publishing…" : "Post this deal"}
-          </button>
-        </form>
+                  {boardCategories
+                    .filter((c) => c.id !== "all")
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.label}
+                      </option>
+                    ))}
+                  <option value="__custom">+ My own niche…</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              </div>
+              {form.category === "__custom" ? (
+                <input
+                  value={form.customCategory}
+                  onChange={(e) => setForm({ ...form, customCategory: e.target.value })}
+                  placeholder="Name your niche — e.g. “3D printing”"
+                  className={`${inputClass} sm:col-start-2`}
+                />
+              ) : null}
+              <input
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="One line on what you get"
+                className={inputClass}
+              />
+              <div className="flex flex-col gap-2">
+                <label className="flex h-13 items-center gap-3 rounded-full border border-border bg-card px-4 text-sm text-muted-foreground">
+                  Expires
+                  <input
+                    type="date"
+                    disabled={form.neverExpires}
+                    value={form.expires_at}
+                    onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
+                    className="flex-1 bg-transparent text-foreground outline-none disabled:opacity-40"
+                  />
+                </label>
+                <label className="flex items-center gap-2 px-4 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={form.neverExpires}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        neverExpires: e.target.checked,
+                        expires_at: e.target.checked ? "" : form.expires_at,
+                      })
+                    }
+                    className="h-4 w-4 accent-[var(--primary)]"
+                  />
+                  Never expires
+                </label>
+              </div>
+              <div className="flex flex-col gap-2 sm:col-span-2 sm:flex-row">
+                <button
+                  disabled={saving}
+                  className="h-13 flex-1 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-pop transition-transform hover:-translate-y-0.5 disabled:opacity-60"
+                >
+                  {saving ? "Publishing…" : "Publish deal"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormOpen(false);
+                    setForm(emptyForm);
+                  }}
+                  className="flex h-13 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-6 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setFormOpen(true)}
+              className="flex h-13 w-full items-center justify-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-pop transition-transform hover:-translate-y-0.5"
+            >
+              <Plus className="h-4 w-4" />
+              Post this deal
+            </button>
+          )}
+        </div>
 
         <div className="mt-10 flex flex-wrap items-center gap-2">
-          {categories.map((c) => (
+          {boardCategories.map((c) => (
             <button
               key={c.id}
               onClick={() => setActive(c.id)}
@@ -256,22 +390,19 @@ function Home() {
           </p>
         ) : null}
 
-        <section className="mt-6 space-y-2" aria-label="Podium">
-          {isLoading
-            ? [0, 1, 2].map((i) => (
-                <div key={i} className="h-28 animate-pulse rounded-xl bg-surface" />
-              ))
-            : board.slice(0, 3).map((offer) => (
-                <OfferRow
-                  key={offer.id}
-                  offer={offer}
-                  voted={votedIds.has(offer.id)}
-                  pending={vote.isPending}
-                  onVote={onVote}
-                  mine={!!visitorKey && offer.owner_key === visitorKey}
-                />
-              ))}
-        </section>
+        {podium.length > 0 ? (
+          <section className="mt-6 space-y-2" aria-label="Podium">
+            {podium.map(renderRow)}
+          </section>
+        ) : null}
+
+        {isLoading ? (
+          <section className="mt-6 space-y-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-28 animate-pulse rounded-xl bg-surface" />
+            ))}
+          </section>
+        ) : null}
 
         {upcoming.length > 0 ? (
           <section className="mt-10">
@@ -306,22 +437,49 @@ function Home() {
         ) : null}
 
         <section className="mt-10 space-y-2">
-          {board.slice(3).map((offer) => (
-            <OfferRow
-              key={offer.id}
-              offer={offer}
-              voted={votedIds.has(offer.id)}
-              pending={vote.isPending}
-              onVote={onVote}
-              mine={!!visitorKey && offer.owner_key === visitorKey}
-            />
-          ))}
+          {rest.map(renderRow)}
           {!isLoading && board.length === 0 ? (
             <p className="rounded-xl bg-surface p-8 text-center text-sm text-muted-foreground">
               No live deals in this category yet — post one and it starts at #1.
             </p>
           ) : null}
         </section>
+
+        {pageCount > 1 ? (
+          <nav
+            className="mt-8 flex items-center justify-center gap-2"
+            aria-label="Board pagination"
+          >
+            <button
+              onClick={() => setPage(Math.max(currentPage - 1, 1))}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold disabled:opacity-40"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" /> Prev
+            </button>
+            {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => setPage(n)}
+                aria-current={n === currentPage ? "page" : undefined}
+                className={`h-9 w-9 rounded-full text-sm font-bold transition-colors ${
+                  n === currentPage
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground hover:bg-accent"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage(Math.min(currentPage + 1, pageCount))}
+              disabled={currentPage === pageCount}
+              className="flex items-center gap-1 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold disabled:opacity-40"
+            >
+              Next <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </nav>
+        ) : null}
       </main>
 
       <SiteFooter />
