@@ -5,17 +5,68 @@ export type Category = { id: string; label: string };
 export const categories: Category[] = [
   { id: "all", label: "All" },
   { id: "software", label: "Software" },
+  { id: "ai-tools", label: "AI tools" },
+  { id: "saas", label: "SaaS" },
+  { id: "hosting", label: "Hosting & domains" },
   { id: "marketing", label: "Marketing" },
+  { id: "seo", label: "SEO" },
+  { id: "design", label: "Design" },
+  { id: "courses", label: "Courses & education" },
   { id: "finance", label: "Finance" },
+  { id: "crypto", label: "Crypto" },
   { id: "retail", label: "Retail" },
+  { id: "fashion", label: "Fashion" },
+  { id: "electronics", label: "Electronics" },
+  { id: "home", label: "Home & garden" },
+  { id: "food", label: "Food & drink" },
   { id: "travel", label: "Travel" },
-  { id: "health", label: "Health" },
+  { id: "health", label: "Health & fitness" },
+  { id: "beauty", label: "Beauty" },
+  { id: "pets", label: "Pets" },
+  { id: "kids", label: "Kids & baby" },
+  { id: "sports", label: "Sports & outdoors" },
+  { id: "auto", label: "Automotive" },
   { id: "gaming", label: "Gaming" },
+  { id: "entertainment", label: "Entertainment" },
+  { id: "mobile", label: "Mobile & telecom" },
   { id: "business", label: "Business" },
+  { id: "freelance", label: "Freelance & jobs" },
+  { id: "events", label: "Events & tickets" },
+  { id: "other", label: "Other" },
 ];
 
+/** Turns any free-text niche into a stable category id. */
+export function slugifyCategory(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40);
+}
+
+const titleCase = (id: string) =>
+  id
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
 export const categoryLabel = (id: string) =>
-  categories.find((c) => c.id === id)?.label ?? id;
+  categories.find((c) => c.id === id)?.label ?? titleCase(id);
+
+/** Built-in categories plus any custom niche already used by a posted deal. */
+export function allCategories(offers: { category: string }[]): Category[] {
+  const known = new Set(categories.map((c) => c.id));
+  const extra: Category[] = [];
+  for (const o of offers) {
+    if (!o.category || known.has(o.category)) continue;
+    known.add(o.category);
+    extra.push({ id: o.category, label: categoryLabel(o.category) });
+  }
+  extra.sort((a, b) => a.label.localeCompare(b.label));
+  return [...categories, ...extra];
+}
+
 
 export type Offer = {
   id: string;
