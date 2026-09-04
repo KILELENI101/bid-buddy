@@ -45,7 +45,7 @@ function Group({
   expired,
 }: {
   title: string;
-  hint?: string;
+  hint?: string | undefined;
   offers: Offer[];
   expired?: boolean;
 }) {
