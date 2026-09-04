@@ -137,6 +137,31 @@ function Home() {
     [offers],
   );
 
+  const listSchema =
+    pageOffers.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Top-ranked deals on TOPOFFER",
+          url: "https://top1deal.dev/",
+          numberOfItems: board.length,
+          itemListElement: pageOffers.slice(0, 50).map((offer, i) => ({
+            "@type": "ListItem",
+            position: pageStart + i + 1,
+            item: {
+              "@type": "Offer",
+              name: offer.title,
+              description: offer.description,
+              url: offer.url,
+              availability: "https://schema.org/InStock",
+              seller: { "@type": "Organization", name: offer.merchant },
+              ...(offer.coupon_code ? { couponCode: offer.coupon_code } : {}),
+              ...(offer.expires_at ? { validThrough: offer.expires_at } : {}),
+            },
+          })),
+        }
+      : null;
+
   const totalVotes = offers.reduce((sum, o) => sum + o.vote_count, 0);
   const liveCount = offers.filter((o) => isLive(o)).length;
 

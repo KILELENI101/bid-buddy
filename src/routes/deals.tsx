@@ -53,6 +53,40 @@ function DealsFeed() {
           Every live deal and coupon in one list — discount, expiry and what you actually get.
         </p>
 
+        <JsonLd
+          data={breadcrumbs([
+            { name: "TOPOFFER", path: "/" },
+            { name: "Deals feed", path: "/deals" },
+          ])}
+        />
+        {feed.length > 0 ? (
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              name: "Live deals on TOPOFFER",
+              url: `${SITE_URL}/deals`,
+              numberOfItems: feed.length,
+              itemListElement: feed.slice(0, 100).map((offer, i) => ({
+                "@type": "ListItem",
+                position: i + 1,
+                item: {
+                  "@type": "Offer",
+                  name: offer.title,
+                  description: offer.description,
+                  url: offer.url,
+                  category: categoryLabel(offer.category),
+                  availability: "https://schema.org/InStock",
+                  seller: { "@type": "Organization", name: offer.merchant },
+                  ...(offer.coupon_code ? { couponCode: offer.coupon_code } : {}),
+                  ...(offer.expires_at ? { validThrough: offer.expires_at } : {}),
+                },
+              })),
+            }}
+          />
+        ) : null}
+
+
         {isLoading ? (
           <p className="mt-10 text-sm text-muted-foreground">Loading deals…</p>
         ) : feed.length === 0 ? (
