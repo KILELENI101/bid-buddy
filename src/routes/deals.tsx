@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { ArrowUpRight, Clock, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { JsonLd, SITE_URL, breadcrumbs } from "@/components/structured-data";
 import { Tile } from "@/components/brand";
 import { useOffers, useVisitorKey } from "@/hooks/use-offer-data";
 import {
