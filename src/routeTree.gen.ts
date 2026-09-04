@@ -16,6 +16,7 @@ import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as DealsRouteImport } from './routes/deals'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TodayRouteImport } from './routes/today'
 
@@ -54,6 +55,11 @@ const RankingRoute = RankingRouteImport.update({
   path: '/ranking',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/deals': typeof DealsRoute
   '/privacy': typeof PrivacyRoute
   '/ranking': typeof RankingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/deals': typeof DealsRoute
   '/privacy': typeof PrivacyRoute
   '/ranking': typeof RankingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/deals': typeof DealsRoute
   '/privacy': typeof PrivacyRoute
   '/ranking': typeof RankingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/privacy'
     | '/ranking'
+    | '/sitemap.xml'
     | '/terms'
     | '/today'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/privacy'
     | '/ranking'
+    | '/sitemap.xml'
     | '/terms'
     | '/today'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/deals'
     | '/privacy'
     | '/ranking'
+    | '/sitemap.xml'
     | '/terms'
     | '/today'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   DealsRoute: typeof DealsRoute
   PrivacyRoute: typeof PrivacyRoute
   RankingRoute: typeof RankingRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TodayRoute: typeof TodayRoute
 }
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RankingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   DealsRoute: DealsRoute,
   PrivacyRoute: PrivacyRoute,
   RankingRoute: RankingRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TodayRoute: TodayRoute,
 }
