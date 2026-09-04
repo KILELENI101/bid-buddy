@@ -82,6 +82,7 @@ export type Offer = {
   expires_at: string | null;
   vote_count: number;
   clicks: number;
+  views: number;
   tint: string;
   initials: string;
   owner_key: string | null;
@@ -296,6 +297,34 @@ export async function removeTarget(offerId: string, ownerKey: string) {
 export async function registerClick(offer: Offer, visitorKey: string) {
   if (!CLICK_TRACKING_ENABLED || !visitorKey) return;
   await callRpc("rpc_register_click", { _offer_id: offer.id, _visitor_key: visitorKey });
-
 }
+
+/** Counts one impression per deal per browser session, so conversion rates mean something. */
+const SEEN_STORAGE_KEY = "topoffer:seen";
+
+export async function registerViews(offerIds: string[], visitorKey: string) {
+  if (!CLICK_TRACKING_ENABLED || !visitorKey || typeof window === "undefined") return;
+  let seen: string[] = [];
+  try {
+    seen = JSON.parse(window.sessionStorage.getItem(SEEN_STORAGE_KEY) ?? "[]") as string[];
+  } catch {
+    seen = [];
+  }
+  const fresh = offerIds.filter((id) => !seen.includes(id)).slice(0, 40);
+  if (fresh.length === 0) return;
+  window.sessionStorage.setItem(SEEN_STORAGE_KEY, JSON.stringify([...seen, ...fresh]));
+  for (const id of fresh) {
+    try {
+      await callRpc("rpc_register_view", { _offer_id: id, _visitor_key: visitorKey });
+    } catch {
+      return;
+    }
+  }
+}
+
+export const conversionRate = (offer: Offer) =>
+  offer.views > 0 ? offer.clicks / offer.views : 0;
+
+export const formatPercent = (value: number) =>
+  `${(value * 100).toFixed(value >= 0.1 ? 0 : 1)}%`;
 
