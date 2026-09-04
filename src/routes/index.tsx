@@ -15,6 +15,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { inRange, isRangeId } from "@/lib/ranges";
 import { OfferRow } from "@/components/offer-row";
 import { Tile } from "@/components/brand";
+import { JsonLd } from "@/components/structured-data";
 import { useMyVotes, useOffers, useToggleVote, useVisitorKey } from "@/hooks/use-offer-data";
 import {
   allCategories,
@@ -262,6 +263,8 @@ function Home() {
   return (
     <div className="min-h-screen">
       <SiteHeader scope="board" />
+
+      {listSchema ? <JsonLd data={listSchema} /> : null}
 
       <main className="mx-auto w-full max-w-6xl px-5">
         <div className="flex justify-center">
