@@ -1,20 +1,29 @@
 import { Link } from "@tanstack/react-router";
+import markAsset from "@/assets/topoffer-mark.png.asset.json";
 
 export function Logo() {
   return (
-    <Link to="/" search={{ category: "all" }} className="flex items-center gap-2.5">
-      <span className="flex flex-col gap-[3px]">
-        <span className="block h-[3px] w-6 rounded-full bg-primary" />
-        <span className="block h-[3px] w-4 rounded-full bg-foreground/70" />
-        <span className="block h-[3px] w-5 rounded-full bg-foreground/40" />
-      </span>
+    <Link
+      to="/"
+      search={{ category: "all" }}
+      className="flex shrink-0 items-center gap-2"
+      aria-label="TOPOFFER home"
+    >
+      <img
+        src={markAsset.url}
+        alt=""
+        width={1024}
+        height={1024}
+        loading="lazy"
+        className="h-8 w-8"
+      />
       <span className="text-xl font-bold tracking-tight">
         TOP<span className="text-muted-foreground">OFFER</span>
       </span>
-
     </Link>
   );
 }
+
 
 export function Tile({
   initials,
