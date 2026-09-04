@@ -127,10 +127,20 @@ export const secureAction = createServerFn({ method: "POST" })
     }
 
     if (data.action === "click") {
-      const { error } = await supabaseAdmin.rpc as unknown as never; // placeholder removed below
-      void error;
+      const { data: row } = await supabaseAdmin
+        .from("offers")
+        .select("clicks")
+        .eq("id", data.offerId)
+        .maybeSingle();
+      if (row) {
+        await supabaseAdmin
+          .from("offers")
+          .update({ clicks: (row.clicks ?? 0) + 1 })
+          .eq("id", data.offerId);
+      }
       return { result: "ok" as const };
     }
+
 
     // submit
     const { data: created, error } = await supabaseAdmin
