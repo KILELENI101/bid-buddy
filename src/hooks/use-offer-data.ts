@@ -18,7 +18,7 @@ export function useVisitorKey() {
 }
 
 export function useOffers() {
-  return useQuery({ queryKey: ["offers"], queryFn: fetchOffers, staleTime: 10_000 });
+  return useQuery({ queryKey: ["offers"], queryFn: fetchOffers, staleTime: 5 * 60_000, refetchOnWindowFocus: false, gcTime: 10 * 60_000 });
 }
 
 export function useMyVotes(voterKey: string) {

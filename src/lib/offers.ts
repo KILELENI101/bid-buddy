@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { secureAction } from "./offers.functions";
 
 export type Category = { id: string; label: string };
 

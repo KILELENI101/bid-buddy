@@ -115,7 +115,7 @@ export function OfferRow({
             target="_blank"
             rel="nofollow noopener"
             onClick={() => {
-              void registerClick(offer).catch(() => undefined);
+              void registerClick(offer, visitorKey).catch(() => undefined);
             }}
             className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"
           >
