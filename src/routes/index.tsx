@@ -388,17 +388,21 @@ function Home() {
         </div>
 
         <div className="mt-10 flex flex-wrap items-center gap-2">
-          {boardCategories.map((c) => (
+          {RANGES.map((r) => (
             <button
-              key={c.id}
-              onClick={() => setActive(c.id)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                active === c.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-accent"
+              key={r.id}
+              onClick={() => {
+                setRange(r.id);
+                setPage(1);
+              }}
+              aria-pressed={range === r.id}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                range === r.id
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {c.label}
+              {r.label}
             </button>
           ))}
           <Link
@@ -408,6 +412,7 @@ function Home() {
             Explore <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
+
 
         {error ? (
           <p className="mt-6 rounded-xl bg-surface p-6 text-center text-sm text-muted-foreground">
