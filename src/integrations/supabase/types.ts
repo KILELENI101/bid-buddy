@@ -161,7 +161,68 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      enforce_rate_limit: {
+        Args: {
+          _action: string
+          _max: number
+          _visitor_key: string
+          _window_minutes: number
+        }
+        Returns: undefined
+      }
       prune_abuse_events: { Args: never; Returns: number }
+      rpc_register_click: {
+        Args: { _offer_id: string; _visitor_key: string }
+        Returns: undefined
+      }
+      rpc_save_rank_target: {
+        Args: { _offer_id: string; _target_rank: number; _visitor_key: string }
+        Returns: string
+      }
+      rpc_submit_offer: {
+        Args: {
+          _category: string
+          _coupon_code: string
+          _description: string
+          _discount_label: string
+          _expires_at: string
+          _initials: string
+          _merchant: string
+          _starts_at: string
+          _tint: string
+          _title: string
+          _url: string
+          _visitor_key: string
+        }
+        Returns: {
+          category: string
+          clicks: number
+          coupon_code: string | null
+          created_at: string
+          description: string
+          discount_label: string
+          expires_at: string | null
+          id: string
+          initials: string
+          merchant: string
+          owner_key: string | null
+          starts_at: string
+          tint: string
+          title: string
+          url: string
+          vote_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "offers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      rpc_toggle_vote: {
+        Args: { _offer_id: string; _visitor_key: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
