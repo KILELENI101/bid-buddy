@@ -56,6 +56,31 @@ const PAGE_SIZE = 100;
 /** Separator lines are drawn before these ranks. */
 const TIER_MARKS = [11, 21, 31, 41, 51];
 
+/** Time windows for the board, matching the chip rail above the podium. */
+const RANGES = [
+  { id: "today", label: "Today" },
+  { id: "yesterday", label: "Yesterday" },
+  { id: "week", label: "This week" },
+  { id: "month", label: "This month" },
+  { id: "all", label: "All-time" },
+] as const;
+type RangeId = (typeof RANGES)[number]["id"];
+
+const DAY = 86_400_000;
+
+function inRange(postedAt: string, range: RangeId) {
+  if (range === "all") return true;
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const posted = new Date(postedAt).getTime();
+  const todayStart = start.getTime();
+  if (range === "today") return posted >= todayStart;
+  if (range === "yesterday") return posted >= todayStart - DAY && posted < todayStart;
+  if (range === "week") return posted >= todayStart - 6 * DAY;
+  return posted >= todayStart - 29 * DAY;
+}
+
+
 const emptyForm = {
   title: "",
   merchant: "",
@@ -86,6 +111,7 @@ function Home() {
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [range, setRange] = useState<RangeId>("all");
 
   const boardCategories = useMemo(() => allCategories(offers), [offers]);
   const active =
@@ -98,10 +124,11 @@ function Home() {
   const votedIds = useMemo(() => new Set(myVotes.map((v) => v.offer_id)), [myVotes]);
 
   const board = useMemo(() => {
-    const live = offers.filter((o) => isLive(o));
+    const live = offers.filter((o) => isLive(o) && inRange(o.created_at, range));
     const scoped = active === "all" ? live : live.filter((o) => o.category === active);
     return rankOffers(scoped);
-  }, [offers, active]);
+  }, [offers, active, range]);
+
 
   const pageCount = Math.max(1, Math.ceil(board.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -363,17 +390,21 @@ function Home() {
         </div>
 
         <div className="mt-10 flex flex-wrap items-center gap-2">
-          {boardCategories.map((c) => (
+          {RANGES.map((r) => (
             <button
-              key={c.id}
-              onClick={() => setActive(c.id)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                active === c.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-accent"
+              key={r.id}
+              onClick={() => {
+                setRange(r.id);
+                setPage(1);
+              }}
+              aria-pressed={range === r.id}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                range === r.id
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {c.label}
+              {r.label}
             </button>
           ))}
           <Link
@@ -383,6 +414,7 @@ function Home() {
             Explore <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
+
 
         {error ? (
           <p className="mt-6 rounded-xl bg-surface p-6 text-center text-sm text-muted-foreground">
