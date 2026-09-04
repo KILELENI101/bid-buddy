@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TodayRouteImport } from './routes/today'
@@ -29,6 +30,11 @@ const AboutRoute = AboutRouteImport.update({
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RankingRoute = RankingRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/categories': typeof CategoriesRoute
+  '/privacy': typeof PrivacyRoute
   '/ranking': typeof RankingRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/categories': typeof CategoriesRoute
+  '/privacy': typeof PrivacyRoute
   '/ranking': typeof RankingRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
@@ -68,20 +76,36 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/categories': typeof CategoriesRoute
+  '/privacy': typeof PrivacyRoute
   '/ranking': typeof RankingRoute
   '/terms': typeof TermsRoute
   '/today': typeof TodayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/categories' | '/ranking' | '/terms' | '/today'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/categories'
+    | '/privacy'
+    | '/ranking'
+    | '/terms'
+    | '/today'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/categories' | '/ranking' | '/terms' | '/today'
+  to:
+    | '/'
+    | '/about'
+    | '/categories'
+    | '/privacy'
+    | '/ranking'
+    | '/terms'
+    | '/today'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/categories'
+    | '/privacy'
     | '/ranking'
     | '/terms'
     | '/today'
@@ -91,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   CategoriesRoute: typeof CategoriesRoute
+  PrivacyRoute: typeof PrivacyRoute
   RankingRoute: typeof RankingRoute
   TermsRoute: typeof TermsRoute
   TodayRoute: typeof TodayRoute
@@ -117,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ranking': {
@@ -147,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CategoriesRoute: CategoriesRoute,
+  PrivacyRoute: PrivacyRoute,
   RankingRoute: RankingRoute,
   TermsRoute: TermsRoute,
   TodayRoute: TodayRoute,
