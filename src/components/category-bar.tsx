@@ -97,10 +97,10 @@ export function CategoryBar() {
         })}
         <Link
           to="/categories"
-          className="ml-2 flex shrink-0 items-center gap-1.5 rounded-full border border-primary/40 bg-card px-3 py-1.5 text-sm font-semibold text-primary shadow-card hover:bg-secondary"
+          className="ml-2 flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-primary hover:text-primary/80"
         >
           <Globe2 className="h-3.5 w-3.5" />
-          All categories
+          Explore
         </Link>
       </div>
     </div>
