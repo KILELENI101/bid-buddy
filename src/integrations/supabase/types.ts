@@ -55,6 +55,7 @@ export type Database = {
           tint: string
           title: string
           url: string
+          views: number
           vote_count: number
         }
         Insert: {
@@ -73,6 +74,7 @@ export type Database = {
           tint?: string
           title: string
           url: string
+          views?: number
           vote_count?: number
         }
         Update: {
@@ -91,6 +93,7 @@ export type Database = {
           tint?: string
           title?: string
           url?: string
+          views?: number
           vote_count?: number
         }
         Relationships: []
@@ -175,6 +178,10 @@ export type Database = {
         Args: { _offer_id: string; _visitor_key: string }
         Returns: undefined
       }
+      rpc_register_view: {
+        Args: { _offer_id: string; _visitor_key: string }
+        Returns: undefined
+      }
       rpc_save_rank_target: {
         Args: { _offer_id: string; _target_rank: number; _visitor_key: string }
         Returns: string
@@ -210,6 +217,7 @@ export type Database = {
           tint: string
           title: string
           url: string
+          views: number
           vote_count: number
         }
         SetofOptions: {
