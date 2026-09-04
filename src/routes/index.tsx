@@ -449,7 +449,10 @@ function Home() {
           </section>
         ) : null}
 
-        <section className="mt-10 space-y-2">
+        <section className="mt-10 space-y-2" aria-labelledby="all-deals-heading">
+          <h2 id="all-deals-heading" className="text-lg font-bold">
+            All ranked deals
+          </h2>
           {rest.map(renderRow)}
           {!isLoading && board.length === 0 ? (
             <p className="rounded-xl bg-surface p-8 text-center text-sm text-muted-foreground">
@@ -457,6 +460,7 @@ function Home() {
             </p>
           ) : null}
         </section>
+
 
         {pageCount > 1 ? (
           <nav
