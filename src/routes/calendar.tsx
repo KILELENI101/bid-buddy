@@ -24,7 +24,7 @@ export const Route = createFileRoute("/calendar")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: DealCalendar;
+  component: DealCalendar,
 });
 
 const dayKey = (iso: string) => new Date(iso).toISOString().slice(0, 10);
