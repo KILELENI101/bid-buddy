@@ -111,6 +111,7 @@ function Home() {
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [range, setRange] = useState<RangeId>("all");
 
   const boardCategories = useMemo(() => allCategories(offers), [offers]);
   const active =
