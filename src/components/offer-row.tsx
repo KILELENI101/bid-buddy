@@ -8,6 +8,7 @@ import {
   timeLeft,
   type RankedOffer,
 } from "@/lib/offers";
+import { useVisitorKey } from "@/hooks/use-offer-data";
 
 export function OfferRow({
   offer,
@@ -22,6 +23,7 @@ export function OfferRow({
   onVote: (id: string) => void;
   mine?: boolean;
 }) {
+  const visitorKey = useVisitorKey();
   const podium = offer.rank <= 3;
 
   return (
