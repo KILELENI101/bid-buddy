@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { inRange, isRangeId } from "@/lib/ranges";
 import { OfferRow } from "@/components/offer-row";
 import { Tile } from "@/components/brand";
 import { useMyVotes, useOffers, useToggleVote, useVisitorKey } from "@/hooks/use-offer-data";
@@ -45,8 +46,12 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { category?: string | undefined } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { category?: string | undefined; range?: string | undefined; q?: string | undefined } => ({
     category: typeof search["category"] === "string" ? (search["category"] as string) : undefined,
+    range: typeof search["range"] === "string" ? (search["range"] as string) : undefined,
+    q: typeof search["q"] === "string" ? (search["q"] as string) : undefined,
   }),
   component: Home,
 });
@@ -56,29 +61,6 @@ const PAGE_SIZE = 100;
 /** Separator lines are drawn before these ranks. */
 const TIER_MARKS = [11, 21, 31, 41, 51];
 
-/** Time windows for the board, matching the chip rail above the podium. */
-const RANGES = [
-  { id: "today", label: "Today" },
-  { id: "yesterday", label: "Yesterday" },
-  { id: "week", label: "This week" },
-  { id: "month", label: "This month" },
-  { id: "all", label: "All-time" },
-] as const;
-type RangeId = (typeof RANGES)[number]["id"];
-
-const DAY = 86_400_000;
-
-function inRange(postedAt: string, range: RangeId) {
-  if (range === "all") return true;
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const posted = new Date(postedAt).getTime();
-  const todayStart = start.getTime();
-  if (range === "today") return posted >= todayStart;
-  if (range === "yesterday") return posted >= todayStart - DAY && posted < todayStart;
-  if (range === "week") return posted >= todayStart - 6 * DAY;
-  return posted >= todayStart - 29 * DAY;
-}
 
 
 const emptyForm = {
@@ -98,7 +80,7 @@ const inputClass =
   "h-13 rounded-full border border-border bg-card px-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40";
 
 function Home() {
-  const { category } = Route.useSearch();
+  const { category, range: rangeParam, q } = Route.useSearch();
   const navigate = useNavigate({ from: "/" });
   const visitorKey = useVisitorKey();
   const queryClient = useQueryClient();
@@ -111,14 +93,15 @@ function Home() {
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [range, setRange] = useState<RangeId>("all");
+  const range = isRangeId(rangeParam) ? rangeParam : "all";
+  const query = (q ?? "").trim().toLowerCase();
 
   const boardCategories = useMemo(() => allCategories(offers), [offers]);
   const active =
     category && boardCategories.some((c) => c.id === category) ? category : "all";
   const setActive = (id: string) => {
     setPage(1);
-    navigate({ search: { category: id }, resetScroll: false });
+    navigate({ search: (prev) => ({ ...prev, category: id }), resetScroll: false });
   };
 
   const votedIds = useMemo(() => new Set(myVotes.map((v) => v.offer_id)), [myVotes]);
@@ -126,8 +109,16 @@ function Home() {
   const board = useMemo(() => {
     const live = offers.filter((o) => isLive(o) && inRange(o.created_at, range));
     const scoped = active === "all" ? live : live.filter((o) => o.category === active);
-    return rankOffers(scoped);
-  }, [offers, active, range]);
+    const searched = query
+      ? scoped.filter((o) =>
+          `${o.title} ${o.merchant} ${o.coupon_code ?? ""} ${o.description}`
+            .toLowerCase()
+            .includes(query),
+        )
+      : scoped;
+    return rankOffers(searched);
+  }, [offers, active, range, query]);
+
 
 
   const pageCount = Math.max(1, Math.ceil(board.length / PAGE_SIZE));
@@ -389,31 +380,15 @@ function Home() {
           )}
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center gap-2">
-          {RANGES.map((r) => (
-            <button
-              key={r.id}
-              onClick={() => {
-                setRange(r.id);
-                setPage(1);
-              }}
-              aria-pressed={range === r.id}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
-                range === r.id
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
+        <div className="mt-10 flex items-center justify-end">
           <Link
             to="/categories"
-            className="ml-auto flex items-center gap-1 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-card transition-colors hover:bg-secondary"
+            className="flex items-center gap-1 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-card transition-colors hover:bg-secondary"
           >
             Explore <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
+
 
 
         {error ? (
