@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      abuse_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_hint: string | null
+          visitor_key: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_hint?: string | null
+          visitor_key: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_hint?: string | null
+          visitor_key?: string
+        }
+        Relationships: []
+      }
       offers: {
         Row: {
           category: string
@@ -137,7 +161,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      prune_abuse_events: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
