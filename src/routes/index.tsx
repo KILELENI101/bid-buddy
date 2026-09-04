@@ -52,7 +52,7 @@ export const Route = createFileRoute("/")({
 });
 
 /** Deals shown per page; a new page starts once the board passes this many deals. */
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 100;
 /** Separator lines are drawn before these ranks. */
 const TIER_MARKS = [11, 21, 31, 41, 51];
 
