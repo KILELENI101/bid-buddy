@@ -123,10 +123,11 @@ function Home() {
   const votedIds = useMemo(() => new Set(myVotes.map((v) => v.offer_id)), [myVotes]);
 
   const board = useMemo(() => {
-    const live = offers.filter((o) => isLive(o));
+    const live = offers.filter((o) => isLive(o) && inRange(o.created_at, range));
     const scoped = active === "all" ? live : live.filter((o) => o.category === active);
     return rankOffers(scoped);
-  }, [offers, active]);
+  }, [offers, active, range]);
+
 
   const pageCount = Math.max(1, Math.ceil(board.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
