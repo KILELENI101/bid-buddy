@@ -56,9 +56,13 @@ export function SiteHeader({ scope = "board" }: { scope?: "board" | "dashboard" 
             >
               Deals
             </Link>
+            <Link to="/deals" className={navLink} activeProps={{ className: "text-foreground" }}>
+              Feed
+            </Link>
             <Link to="/today" className={navLink} activeProps={{ className: "text-foreground" }}>
               Dashboard
             </Link>
+
             <Link to="/ranking" className={navLink} activeProps={{ className: "text-foreground" }}>
               Ranking
             </Link>

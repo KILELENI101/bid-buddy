@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as DealsRouteImport } from './routes/deals'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -36,6 +37,11 @@ const CalendarRoute = CalendarRouteImport.update({
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DealsRoute = DealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/calendar': typeof CalendarRoute
   '/categories': typeof CategoriesRoute
+  '/deals': typeof DealsRoute
   '/privacy': typeof PrivacyRoute
   '/ranking': typeof RankingRoute
   '/terms': typeof TermsRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/calendar': typeof CalendarRoute
   '/categories': typeof CategoriesRoute
+  '/deals': typeof DealsRoute
   '/privacy': typeof PrivacyRoute
   '/ranking': typeof RankingRoute
   '/terms': typeof TermsRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/calendar': typeof CalendarRoute
   '/categories': typeof CategoriesRoute
+  '/deals': typeof DealsRoute
   '/privacy': typeof PrivacyRoute
   '/ranking': typeof RankingRoute
   '/terms': typeof TermsRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/calendar'
     | '/categories'
+    | '/deals'
     | '/privacy'
     | '/ranking'
     | '/terms'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/calendar'
     | '/categories'
+    | '/deals'
     | '/privacy'
     | '/ranking'
     | '/terms'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/calendar'
     | '/categories'
+    | '/deals'
     | '/privacy'
     | '/ranking'
     | '/terms'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CalendarRoute: typeof CalendarRoute
   CategoriesRoute: typeof CategoriesRoute
+  DealsRoute: typeof DealsRoute
   PrivacyRoute: typeof PrivacyRoute
   RankingRoute: typeof RankingRoute
   TermsRoute: typeof TermsRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deals': {
+      id: '/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof DealsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CalendarRoute: CalendarRoute,
   CategoriesRoute: CategoriesRoute,
+  DealsRoute: DealsRoute,
   PrivacyRoute: PrivacyRoute,
   RankingRoute: RankingRoute,
   TermsRoute: TermsRoute,
