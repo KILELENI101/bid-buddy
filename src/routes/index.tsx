@@ -380,14 +380,8 @@ function Home() {
           )}
         </div>
 
-        <div className="mt-10 flex items-center justify-end">
-          <Link
-            to="/categories"
-            className="flex items-center gap-1 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-card transition-colors hover:bg-secondary"
-          >
-            Explore <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
+        <div className="mt-10" />
+
 
 
 
