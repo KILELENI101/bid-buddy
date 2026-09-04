@@ -79,7 +79,7 @@ const inputClass =
   "h-13 rounded-full border border-border bg-card px-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40";
 
 function Home() {
-  const { category } = Route.useSearch();
+  const { category, range: rangeParam, q } = Route.useSearch();
   const navigate = useNavigate({ from: "/" });
   const visitorKey = useVisitorKey();
   const queryClient = useQueryClient();
@@ -92,14 +92,15 @@ function Home() {
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [range, setRange] = useState<RangeId>("all");
+  const range = isRangeId(rangeParam) ? rangeParam : "all";
+  const query = (q ?? "").trim().toLowerCase();
 
   const boardCategories = useMemo(() => allCategories(offers), [offers]);
   const active =
     category && boardCategories.some((c) => c.id === category) ? category : "all";
   const setActive = (id: string) => {
     setPage(1);
-    navigate({ search: { category: id }, resetScroll: false });
+    navigate({ search: (prev) => ({ ...prev, category: id }), resetScroll: false });
   };
 
   const votedIds = useMemo(() => new Set(myVotes.map((v) => v.offer_id)), [myVotes]);
@@ -107,8 +108,16 @@ function Home() {
   const board = useMemo(() => {
     const live = offers.filter((o) => isLive(o) && inRange(o.created_at, range));
     const scoped = active === "all" ? live : live.filter((o) => o.category === active);
-    return rankOffers(scoped);
-  }, [offers, active, range]);
+    const searched = query
+      ? scoped.filter((o) =>
+          `${o.title} ${o.merchant} ${o.coupon_code ?? ""} ${o.description}`
+            .toLowerCase()
+            .includes(query),
+        )
+      : scoped;
+    return rankOffers(searched);
+  }, [offers, active, range, query]);
+
 
 
   const pageCount = Math.max(1, Math.ceil(board.length / PAGE_SIZE));
