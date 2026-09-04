@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { inRange, isRangeId } from "@/lib/ranges";
 import { OfferRow } from "@/components/offer-row";
 import { Tile } from "@/components/brand";
 import { useMyVotes, useOffers, useToggleVote, useVisitorKey } from "@/hooks/use-offer-data";
