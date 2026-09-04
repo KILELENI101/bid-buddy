@@ -379,31 +379,15 @@ function Home() {
           )}
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center gap-2">
-          {RANGES.map((r) => (
-            <button
-              key={r.id}
-              onClick={() => {
-                setRange(r.id);
-                setPage(1);
-              }}
-              aria-pressed={range === r.id}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
-                range === r.id
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
+        <div className="mt-10 flex items-center justify-end">
           <Link
             to="/categories"
-            className="ml-auto flex items-center gap-1 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-card transition-colors hover:bg-secondary"
+            className="flex items-center gap-1 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-card transition-colors hover:bg-secondary"
           >
             Explore <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
+
 
 
         {error ? (
