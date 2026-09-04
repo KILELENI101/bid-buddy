@@ -261,6 +261,7 @@ function Home() {
             <form className="grid gap-3 sm:grid-cols-2" onSubmit={handleSubmit}>
               <input
                 autoFocus
+                aria-label="Deal title"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="Deal title — e.g. “Acme Pro — 40% off annual”"
@@ -269,6 +270,7 @@ function Home() {
               <div className="relative">
                 <Globe className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
+                  aria-label="Link to the offer"
                   value={form.url}
                   onChange={(e) => setForm({ ...form, url: e.target.value })}
                   placeholder="Link to the offer"
@@ -276,12 +278,14 @@ function Home() {
                 />
               </div>
               <input
+                aria-label="Discount"
                 value={form.discount_label}
                 onChange={(e) => setForm({ ...form, discount_label: e.target.value })}
                 placeholder="Discount — 30% off, BOGO, free trial…"
                 className={inputClass}
               />
               <input
+                aria-label="Coupon code (optional)"
                 value={form.coupon_code}
                 onChange={(e) => setForm({ ...form, coupon_code: e.target.value })}
                 placeholder="Coupon code (optional)"
@@ -289,6 +293,7 @@ function Home() {
               />
               <div className="relative">
                 <select
+                  aria-label="Deal category"
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                   className="h-13 w-full appearance-none rounded-full border border-border bg-card pl-4 pr-10 text-sm outline-none focus:ring-2 focus:ring-ring/40"
@@ -309,6 +314,7 @@ function Home() {
               </div>
               {form.category === "__custom" ? (
                 <input
+                  aria-label="Your own niche name"
                   value={form.customCategory}
                   onChange={(e) => setForm({ ...form, customCategory: e.target.value })}
                   placeholder="Name your niche — e.g. “3D printing”"
@@ -316,11 +322,13 @@ function Home() {
                 />
               ) : null}
               <input
+                aria-label="Deal description"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="One line on what you get"
                 className={inputClass}
               />
+
               <div className="flex flex-col gap-2">
                 <label className="flex h-13 items-center gap-3 rounded-full border border-border bg-card px-4 text-sm text-muted-foreground">
                   Expires
