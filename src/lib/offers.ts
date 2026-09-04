@@ -225,9 +225,27 @@ export async function fetchMyTargets(ownerKey: string): Promise<RankTarget[]> {
   return (data ?? []) as RankTarget[];
 }
 
+/**
+ * Writes go through SECURITY DEFINER database functions. They validate input,
+ * rate limit per visitor and log abuse events server-side, so the browser only
+ * ever needs the publishable key — no service-role key anywhere.
+ */
+type RpcClient = {
+  rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+};
+const rpcClient = supabase as unknown as RpcClient;
+
+async function callRpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+  const { data, error } = await rpcClient.rpc(fn, args);
+  if (error) throw new Error(error.message);
+  return data as T;
+}
+
 export async function toggleVote(offerId: string, voterKey: string): Promise<"added" | "removed"> {
-  const res = await secureAction({ data: { action: "vote", visitorKey: voterKey, offerId } });
-  return res.result as "added" | "removed";
+  return callRpc<"added" | "removed">("rpc_toggle_vote", {
+    _offer_id: offerId,
+    _visitor_key: voterKey,
+  });
 }
 
 export type NewOffer = {
@@ -243,34 +261,41 @@ export type NewOffer = {
 };
 
 export async function submitOffer(offer: NewOffer, ownerKey: string): Promise<Offer> {
-  const res = await secureAction({
-    data: {
-      action: "submit",
-      visitorKey: ownerKey,
-      offer: {
-        ...offer,
-        tint: tintFor(offer.merchant + offer.title),
-        initials: initialsFor(offer.merchant || offer.title),
-      },
-    },
+  return callRpc<Offer>("rpc_submit_offer", {
+    _visitor_key: ownerKey,
+    _title: offer.title,
+    _merchant: offer.merchant,
+    _url: offer.url,
+    _coupon_code: offer.coupon_code,
+    _discount_label: offer.discount_label,
+    _description: offer.description,
+    _category: offer.category,
+    _starts_at: offer.starts_at,
+    _expires_at: offer.expires_at,
+    _tint: tintFor(offer.merchant + offer.title),
+    _initials: initialsFor(offer.merchant || offer.title),
   });
-  return res.offer as Offer;
 }
 
 export async function saveTarget(offerId: string, ownerKey: string, targetRank: number) {
-  await secureAction({
-    data: { action: "target", visitorKey: ownerKey, offerId, targetRank },
+  await callRpc("rpc_save_rank_target", {
+    _offer_id: offerId,
+    _visitor_key: ownerKey,
+    _target_rank: targetRank,
   });
 }
 
 export async function removeTarget(offerId: string, ownerKey: string) {
-  await secureAction({
-    data: { action: "target", visitorKey: ownerKey, offerId, targetRank: null },
+  await callRpc("rpc_save_rank_target", {
+    _offer_id: offerId,
+    _visitor_key: ownerKey,
+    _target_rank: null,
   });
 }
 
 export async function registerClick(offer: Offer, visitorKey: string) {
   if (!CLICK_TRACKING_ENABLED || !visitorKey) return;
-  await secureAction({ data: { action: "click", visitorKey, offerId: offer.id } });
+  await callRpc("rpc_register_click", { _offer_id: offer.id, _visitor_key: visitorKey });
+
 }
 
