@@ -1,32 +1,58 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { ArrowUpRight, Clock, Tag } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo } from "react";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
+import { ArrowUpRight, Clock, Search, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { JsonLd, SITE_URL, breadcrumbs } from "@/components/structured-data";
 import { Tile } from "@/components/brand";
 import { useOffers, useVisitorKey } from "@/hooks/use-offer-data";
 import {
+  allCategories,
   categoryLabel,
   isExpired,
   rankOffers,
   registerClick,
+  registerViews,
   timeLeft,
 } from "@/lib/offers";
 
+const searchSchema = z.object({
+  q: fallback(z.string(), "").default(""),
+  category: fallback(z.string(), "all").default("all"),
+  expiry: fallback(z.string(), "all").default("all"),
+  code: fallback(z.string(), "all").default("all"),
+});
+
+const EXPIRY_OPTIONS = [
+  { id: "all", label: "Any expiry" },
+  { id: "48h", label: "Ends in 48 hours" },
+  { id: "7d", label: "Ends in 7 days" },
+  { id: "30d", label: "Ends in 30 days" },
+  { id: "never", label: "Never expires" },
+];
+
+const CODE_OPTIONS = [
+  { id: "all", label: "Codes & offers" },
+  { id: "with", label: "With coupon code" },
+  { id: "without", label: "No code needed" },
+];
+
 export const Route = createFileRoute("/deals")({
+  validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
       { title: "All deals feed — TOPOFFER" },
       {
         name: "description",
         content:
-          "Every live deal, coupon code and free offer on TOPOFFER with its discount, expiry date and a short description.",
+          "Search every live deal, coupon code and free offer on TOPOFFER and filter by category, coupon code or expiry date.",
       },
       { property: "og:title", content: "All deals feed — TOPOFFER" },
       {
         property: "og:description",
-        content: "Browse every live coupon and offer with discount, expiry and description.",
+        content: "Search and filter every live coupon and offer by category and expiry.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -35,14 +61,55 @@ export const Route = createFileRoute("/deals")({
   component: DealsFeed,
 });
 
+const withinHours = (iso: string | null, hours: number) => {
+  if (!iso) return false;
+  const ms = new Date(iso).getTime() - Date.now();
+  return ms > 0 && ms <= hours * 3_600_000;
+};
+
 function DealsFeed() {
   const { data: offers = [], isLoading } = useOffers();
   const visitorKey = useVisitorKey();
+  const navigate = useNavigate({ from: "/deals" });
+  const { q, category, expiry, code } = Route.useSearch();
 
-  const feed = useMemo(
-    () => rankOffers(offers.filter((o) => !isExpired(o))),
-    [offers],
-  );
+  const update = (patch: Record<string, string | undefined>) => {
+    void navigate({
+      search: (prev) => ({ ...prev, ...patch }),
+      resetScroll: false,
+    });
+  };
+
+  const live = useMemo(() => rankOffers(offers.filter((o) => !isExpired(o))), [offers]);
+  const categoryOptions = useMemo(() => allCategories(offers), [offers]);
+
+  const feed = useMemo(() => {
+    const term = q.trim().toLowerCase().slice(0, 100);
+    return live.filter((o) => {
+      if (category !== "all" && o.category !== category) return false;
+      if (code === "with" && !o.coupon_code) return false;
+      if (code === "without" && o.coupon_code) return false;
+      if (expiry === "never" && o.expires_at) return false;
+      if (expiry === "48h" && !withinHours(o.expires_at, 48)) return false;
+      if (expiry === "7d" && !withinHours(o.expires_at, 24 * 7)) return false;
+      if (expiry === "30d" && !withinHours(o.expires_at, 24 * 30)) return false;
+      if (term === "") return true;
+      return [o.title, o.description, o.merchant, o.coupon_code ?? "", categoryLabel(o.category)]
+        .join(" ")
+        .toLowerCase()
+        .includes(term);
+    });
+  }, [live, q, category, expiry, code]);
+
+  const visibleIds = feed.slice(0, 40).map((o) => o.id);
+  const idKey = visibleIds.join(",");
+  useEffect(() => {
+    if (!visitorKey || visibleIds.length === 0) return;
+    void registerViews(visibleIds, visitorKey).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorKey, idKey]);
+
+  const filtersOn = q !== "" || category !== "all" || expiry !== "all" || code !== "all";
 
   return (
     <div className="min-h-screen">
@@ -59,15 +126,15 @@ function DealsFeed() {
             { name: "Deals feed", path: "/deals" },
           ])}
         />
-        {feed.length > 0 ? (
+        {live.length > 0 ? (
           <JsonLd
             data={{
               "@context": "https://schema.org",
               "@type": "ItemList",
               name: "Live deals on TOPOFFER",
               url: `${SITE_URL}/deals`,
-              numberOfItems: feed.length,
-              itemListElement: feed.slice(0, 100).map((offer, i) => ({
+              numberOfItems: live.length,
+              itemListElement: live.slice(0, 100).map((offer, i) => ({
                 "@type": "ListItem",
                 position: i + 1,
                 item: {
@@ -86,11 +153,92 @@ function DealsFeed() {
           />
         ) : null}
 
+        <section aria-label="Search and filter deals" className="mt-6">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              aria-label="Search the deals feed"
+              value={q}
+              onChange={(e) => update({ q: e.target.value || undefined })}
+              placeholder="Search by title, merchant, code or description"
+              className="h-12 w-full rounded-full border border-border bg-card pl-11 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40"
+            />
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="sr-only" htmlFor="feed-category">
+              Category
+            </label>
+            <select
+              id="feed-category"
+              value={category}
+              onChange={(e) => update({ category: e.target.value })}
+              className="h-10 rounded-full border border-border bg-card px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-ring/40"
+            >
+              {categoryOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.id === "all" ? "All categories" : c.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="sr-only" htmlFor="feed-expiry">
+              Expiry
+            </label>
+            <select
+              id="feed-expiry"
+              value={expiry}
+              onChange={(e) => update({ expiry: e.target.value })}
+              className="h-10 rounded-full border border-border bg-card px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-ring/40"
+            >
+              {EXPIRY_OPTIONS.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="sr-only" htmlFor="feed-code">
+              Coupon code
+            </label>
+            <select
+              id="feed-code"
+              value={code}
+              onChange={(e) => update({ code: e.target.value })}
+              className="h-10 rounded-full border border-border bg-card px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-ring/40"
+            >
+              {CODE_OPTIONS.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+
+            {filtersOn ? (
+              <button
+                type="button"
+                onClick={() =>
+                  update({ q: undefined, category: "all", expiry: "all", code: "all" })
+                }
+                className="h-10 rounded-full px-3 text-sm font-semibold text-primary hover:underline"
+              >
+                Clear filters
+              </button>
+            ) : null}
+          </div>
+
+          <p className="mt-3 text-xs text-muted-foreground">
+            Showing {feed.length} of {live.length} live deals.
+          </p>
+        </section>
 
         {isLoading ? (
           <p className="mt-10 text-sm text-muted-foreground">Loading deals…</p>
         ) : feed.length === 0 ? (
-          <p className="mt-10 text-sm text-muted-foreground">No live deals yet.</p>
+          <p className="mt-10 text-sm text-muted-foreground">
+            No deals match these filters yet.
+          </p>
         ) : (
           <ul className="mt-8 space-y-3">
             {feed.map((offer) => (
