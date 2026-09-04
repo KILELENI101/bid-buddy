@@ -400,10 +400,14 @@ function Home() {
         ) : null}
 
         {podium.length > 0 ? (
-          <section className="mt-6 space-y-2" aria-label="Podium">
+          <section className="mt-6 space-y-2" aria-labelledby="podium-heading">
+            <h2 id="podium-heading" className="text-lg font-bold">
+              Podium — the top 3 deals
+            </h2>
             {podium.map(renderRow)}
           </section>
         ) : null}
+
 
         {isLoading ? (
           <section className="mt-6 space-y-2">
