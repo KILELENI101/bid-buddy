@@ -45,8 +45,12 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { category?: string | undefined } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { category?: string | undefined; range?: string | undefined; q?: string | undefined } => ({
     category: typeof search["category"] === "string" ? (search["category"] as string) : undefined,
+    range: typeof search["range"] === "string" ? (search["range"] as string) : undefined,
+    q: typeof search["q"] === "string" ? (search["q"] as string) : undefined,
   }),
   component: Home,
 });
@@ -56,29 +60,6 @@ const PAGE_SIZE = 100;
 /** Separator lines are drawn before these ranks. */
 const TIER_MARKS = [11, 21, 31, 41, 51];
 
-/** Time windows for the board, matching the chip rail above the podium. */
-const RANGES = [
-  { id: "today", label: "Today" },
-  { id: "yesterday", label: "Yesterday" },
-  { id: "week", label: "This week" },
-  { id: "month", label: "This month" },
-  { id: "all", label: "All-time" },
-] as const;
-type RangeId = (typeof RANGES)[number]["id"];
-
-const DAY = 86_400_000;
-
-function inRange(postedAt: string, range: RangeId) {
-  if (range === "all") return true;
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const posted = new Date(postedAt).getTime();
-  const todayStart = start.getTime();
-  if (range === "today") return posted >= todayStart;
-  if (range === "yesterday") return posted >= todayStart - DAY && posted < todayStart;
-  if (range === "week") return posted >= todayStart - 6 * DAY;
-  return posted >= todayStart - 29 * DAY;
-}
 
 
 const emptyForm = {
