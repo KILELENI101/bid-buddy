@@ -525,6 +525,61 @@ function Home() {
             </button>
           </nav>
         ) : null}
+
+        <section
+          className="mt-14 rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8"
+          aria-labelledby="seo-heading"
+        >
+          <h2 id="seo-heading" className="text-2xl font-bold tracking-tight">
+            Free AI and software deals, ranked by real people
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            TOPOFFER collects free plans, generous trials, student packs, discounts and coupon
+            codes for AI tools, developer software, hosting, design apps, marketing and SEO
+            platforms, and online courses. Nothing is sponsored: every offer is voted on, so the
+            deals worth your time float to the top and stale ones fall away.
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <div>
+              <h3 className="text-sm font-bold">Free AI tools</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Free tiers and trials for chat assistants, image tools and AI coding helpers.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold">Software &amp; hosting</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Developer tools, hosting, domains and databases with free plans or student perks.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold">Coupon codes</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Codes posted by the community, with the discount and expiry shown up front.
+              </p>
+            </div>
+          </div>
+          <nav className="mt-6 flex flex-wrap gap-2" aria-label="Explore TOPOFFER">
+            <Link
+              to="/deals"
+              className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              Browse the deals feed
+            </Link>
+            <Link
+              to="/calendar"
+              className="rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
+            >
+              See what expires next
+            </Link>
+            <Link
+              to="/categories"
+              className="rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
+            >
+              All categories
+            </Link>
+          </nav>
+        </section>
       </main>
 
       <SiteFooter />

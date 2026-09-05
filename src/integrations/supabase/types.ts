@@ -130,6 +130,27 @@ export type Database = {
           },
         ]
       }
+      site_visits: {
+        Row: {
+          first_seen: string
+          last_seen: string
+          visitor_key: string
+          visits: number
+        }
+        Insert: {
+          first_seen?: string
+          last_seen?: string
+          visitor_key: string
+          visits?: number
+        }
+        Update: {
+          first_seen?: string
+          last_seen?: string
+          visitor_key?: string
+          visits?: number
+        }
+        Relationships: []
+      }
       votes: {
         Row: {
           created_at: string
@@ -182,6 +203,7 @@ export type Database = {
         Args: { _offer_id: string; _visitor_key: string }
         Returns: undefined
       }
+      rpc_register_visit: { Args: { _visitor_key: string }; Returns: undefined }
       rpc_save_rank_target: {
         Args: { _offer_id: string; _target_rank: number; _visitor_key: string }
         Returns: string
@@ -231,6 +253,7 @@ export type Database = {
         Args: { _offer_id: string; _visitor_key: string }
         Returns: string
       }
+      rpc_visitor_stats: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never

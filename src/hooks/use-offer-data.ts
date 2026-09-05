@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchMyTargets,
+  fetchVisitorStats,
   fetchMyVotes,
   fetchOffers,
   readVisitorKey,
+  registerVisit,
   toggleVote,
 } from "@/lib/offers";
 
@@ -45,5 +47,22 @@ export function useToggleVote(voterKey: string) {
       void qc.invalidateQueries({ queryKey: ["offers"] });
       void qc.invalidateQueries({ queryKey: ["votes", voterKey] });
     },
+  });
+}
+
+/** Logs this browser's visit once per session, for the traffic dashboard. */
+export function useTrackVisit(visitorKey: string) {
+  useEffect(() => {
+    if (!visitorKey) return;
+    void registerVisit(visitorKey);
+  }, [visitorKey]);
+}
+
+export function useVisitorStats() {
+  return useQuery({
+    queryKey: ["visitor-stats"],
+    queryFn: fetchVisitorStats,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }

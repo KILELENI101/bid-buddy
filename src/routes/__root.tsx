@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { useTrackVisit, useVisitorKey } from "@/hooks/use-offer-data";
 
 function NotFoundComponent() {
   return (
@@ -151,11 +152,18 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function VisitTracker() {
+  const visitorKey = useVisitorKey();
+  useTrackVisit(visitorKey);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
+      <VisitTracker />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" />

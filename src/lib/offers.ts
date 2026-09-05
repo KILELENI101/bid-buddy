@@ -328,3 +328,32 @@ export const conversionRate = (offer: Offer) =>
 export const formatPercent = (value: number) =>
   `${(value * 100).toFixed(value >= 0.1 ? 0 : 1)}%`;
 
+
+// ——— visitor traffic ———
+
+export type VisitorStats = {
+  visitors: number;
+  returning: number;
+  visits: number;
+  today: number;
+  week: number;
+};
+
+const VISIT_SESSION_KEY = "topoffer:visit-logged";
+
+/** Records one visit per browser session for the traffic dashboard. */
+export async function registerVisit(visitorKey: string) {
+  if (!visitorKey || typeof window === "undefined") return;
+  if (window.sessionStorage.getItem(VISIT_SESSION_KEY)) return;
+  window.sessionStorage.setItem(VISIT_SESSION_KEY, "1");
+  try {
+    await callRpc("rpc_register_visit", { _visitor_key: visitorKey });
+  } catch {
+    return;
+  }
+}
+
+export async function fetchVisitorStats(): Promise<VisitorStats> {
+  const data = await callRpc<VisitorStats | null>("rpc_visitor_stats", {});
+  return data ?? { visitors: 0, returning: 0, visits: 0, today: 0, week: 0 };
+}
